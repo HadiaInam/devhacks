@@ -14,7 +14,7 @@ interface Symptom {
 interface GeneralState {
   frequency: string[]; onset: string[]; better: string[]; worse: string[];
   otherSymptoms: string[]; hadBefore: string; medication: string;
-  medicationDetails: string; additionalNotes: string;
+  medicationDetails: string; additionalNotes: string; painSource: string;
 }
 
 interface Report {
@@ -155,13 +155,19 @@ const Btn = ({ children, onClick, variant = "primary", style = {}, disabled = fa
 };
 
 const Tag = ({ label, selected, onClick }: TagProps) => (
-  <button onClick={onClick} className={`px-4 py-2 rounded-full text-sm transition-all duration-150 m-1 ${selected ? "font-semibold text-blue-600 bg-blue-50 border-2 border-blue-500" : "font-normal text-slate-600 bg-white border-2 border-slate-300"}`}>
+  <button
+    onClick={onClick}
+    className={`px-4 py-2 rounded-full text-sm transition-all duration-150 m-1 ${
+      selected
+        ? "font-semibold text-white bg-blue-700 border-2 border-blue-700"
+        : "font-normal text-white bg-slate-600 border-2 border-slate-600 hover:bg-slate-700"
+    }`}>
     {label}
   </button>
 );
 
-const Label = ({ children }: LabelProps) => <div className="font-semibold text-slate-700 mb-2 text-base">{children}</div>;
-const Hint = ({ children }: HintProps) => <div className="text-slate-500 text-sm mb-2.5 leading-relaxed">{children}</div>;
+const Label = ({ children }: LabelProps) => <div className="font-semibold text-white mb-2 text-base">{children}</div>;
+const Hint = ({ children }: HintProps) => <div className="text-white/70 text-sm mb-2.5 leading-relaxed">{children}</div>;
 
 const PainSlider = ({ value, onChange }: PainSliderProps) => {
   const colors = ["#10B981", "#34D399", "#6EE7B7", "#FCD34D", "#FBBF24", "#F59E0B", "#F97316", "#EF4444", "#DC2626", "#991B1B"];
@@ -241,20 +247,20 @@ const SymptomModal = ({ region, existing, onSave, onClose }: SymptomModalProps) 
       <div className="card rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto" style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
         <div className="flex justify-between items-start mb-6">
           <div>
-            <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Describe your pain in</div>
-            <h2 className="text-2xl font-semibold text-slate-800">{region.label}</h2>
+            <div className="text-xs text-white uppercase tracking-wider mb-1">Describe your pain in</div>
+            <h2 className="text-2xl font-semibold text-white">{region.label}</h2>
           </div>
-          <button onClick={onClose} className="bg-transparent border-none text-2xl text-slate-500 cursor-pointer hover:text-slate-700">✕</button>
+          <button onClick={onClose} className="bg-transparent border-none text-2xl text-white cursor-pointer ">✕</button>
         </div>
 
-        <div className="mb-6">
-          <Label>What type of pain? <span className="font-normal text-slate-500">(select all that apply)</span></Label>
+        <div className="mb-6 text-white">
+          <Label>What type of pain? <span className="font-normal text-white">(select all that apply)</span></Label>
           <div className="flex flex-wrap gap-1">
             {PAIN_TYPES.map(t => <Tag key={t} label={t} selected={painTypes.includes(t)} onClick={() => toggle(t)} />)}
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 text-white">
           <Label>Pain intensity</Label>
           <Hint>1 = mild discomfort, 10 = unbearable pain</Hint>
           <PainSlider value={intensity} onChange={setIntensity} />
@@ -268,10 +274,10 @@ const SymptomModal = ({ region, existing, onSave, onClose }: SymptomModalProps) 
         </div>
 
         <div className="mb-7">
-          <Label>Extra details <span className="font-normal text-slate-500">(optional)</span></Label>
+          <Label>Extra details <span className="font-normal text-white">(optional)</span></Label>
           <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3}
             placeholder="e.g. worse in the morning, shooting down left arm..."
-            className="w-full px-3.5 py-3 border-2 border-slate-300 rounded-xl resize-y outline-none text-slate-800 leading-relaxed" />
+            className="w-full px-3.5 py-3 border-2 border-slate-300 rounded-xl resize-y outline-none text-white leading-relaxed" />
         </div>
 
         <div className="flex gap-3">
@@ -312,7 +318,7 @@ export default function App() {
   const [editingSymptomIdx, setEditingSymptomIdx] = useState<number | null>(null);
   const [general, setGeneral] = useState<GeneralState>({
     frequency: [], onset: [], better: [], worse: [], otherSymptoms: [],
-    hadBefore: "", medication: "", medicationDetails: "", additionalNotes: "",
+    hadBefore: "", medication: "", medicationDetails: "", additionalNotes: "", painSource: "",
   });
   const [report, setReport] = useState<Report | null>(null);
   const [suggestions, setSuggestions] = useState<Guidance | null>(null);
@@ -371,6 +377,7 @@ GENERAL INFORMATION:
 - What makes it better: ${general.better.join(", ") || "Not specified"}
 - What makes it worse: ${general.worse.join(", ") || "Not specified"}
 - Other symptoms: ${general.otherSymptoms.join(", ") || "None"}
+- Likely pain source (organ/bone/muscle/joint/nerve): ${general.painSource || "Not specified"}
 - Had this before: ${general.hadBefore || "Not specified"}
 - Current medication: ${general.medication === "yes" ? general.medicationDetails || "Yes (no details given)" : general.medication || "Not specified"}
 - Additional patient notes: ${general.additionalNotes || "None"}
@@ -574,6 +581,20 @@ console.log('server response:', data);
                   </div>
                 </Card>
               ))}
+
+              <Card className="mb-5">
+                <Label>Does the pain feel like it is coming from:</Label>
+                <Hint>
+                  Organ = deep pressure, cramping, or nausea; Bone = sharp or deep ache, worse with touch;
+                  Muscle = soreness or tightness; Joint = pain with movement, stiffness, or swelling;
+                  Nerve = burning, tingling, shooting, or electric pain.
+                </Hint>
+                <div className="flex gap-2.5 flex-wrap">
+                  {["Organ", "Bone", "Muscle", "Joint", "Nerve", "Not sure"].map(o => (
+                    <Tag key={o} label={o} selected={general.painSource === o} onClick={() => setGeneral(g => ({ ...g, painSource: o }))} />
+                  ))}
+                </div>
+              </Card>
 
               <Card className="mb-5">
                 <Label>Have you had this pain before?</Label>
